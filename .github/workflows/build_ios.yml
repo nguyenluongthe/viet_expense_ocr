@@ -1,0 +1,55 @@
+name: Build iOS IPA (Viet Expense OCR)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Package iOS IPA
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java for tools
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Verify Flutter Installation
+        run: flutter doctor -v
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Unit & Widget Tests
+        run: flutter test
+
+      - name: Build iOS App Bundle (Unsigned)
+        run: flutter build ios --release --no-codesign
+
+      - name: Package Payload into .ipa
+        run: |
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r -9 VietExpenseOCR.ipa Payload
+          echo "Successfully generated VietExpenseOCR.ipa"
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VietExpenseOCR-iOS-IPA
+          path: VietExpenseOCR.ipa
+          retention-days: 14

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/constants/categories.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/currency_formatter.dart';
+import '../../core/utils/csv_exporter.dart';
 import '../../models/transaction_model.dart';
 import '../../services/database_service.dart';
 import '../../widgets/transaction_card.dart';
@@ -34,6 +36,76 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _showExportCsvDialog(List<TransactionModel> transactionsToExport) {
+    final csvContent = CsvExporter.generateCsv(transactionsToExport);
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AppTheme.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          title: const Row(
+            children: [
+              Icon(Icons.table_chart_rounded, color: AppTheme.primary, size: 22),
+              SizedBox(width: 8),
+              Text('Xuất báo cáo Excel / CSV', style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Báo cáo gồm ${transactionsToExport.length} giao dịch với chuẩn mã hóa UTF-8 tiếng Việt hiển thị chuẩn trên Microsoft Excel & Google Sheets.',
+                style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 120,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.background,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: SingleChildScrollView(
+                  child: Text(
+                    csvContent,
+                    style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.white70),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('ĐÓNG', style: TextStyle(color: AppTheme.textMuted)),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              icon: const Icon(Icons.copy_rounded, size: 16, color: Colors.white),
+              label: const Text('SAO CHÉP CSV', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: csvContent));
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Đã sao chép toàn bộ dữ liệu CSV vào bộ nhớ tạm!'),
+                    backgroundColor: AppTheme.success,
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _deleteItem(TransactionModel item) async {
@@ -82,6 +154,22 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Lịch sử giao dịch'),
+        actions: [
+          IconButton(
+            tooltip: 'Xuất báo cáo CSV / Excel',
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppTheme.cardColor,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.border),
+              ),
+              child: const Icon(Icons.table_view_rounded, color: AppTheme.accent, size: 18),
+            ),
+            onPressed: () => _showExportCsvDialog(filtered),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Column(
         children: [

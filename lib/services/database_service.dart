@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../core/constants/categories.dart';
+import '../models/category_item.dart';
 import '../models/transaction_model.dart';
 
 class DatabaseService {
@@ -13,6 +14,7 @@ class DatabaseService {
 
   // In-memory cache & fallback for Web / uninitialized SQLite
   final List<TransactionModel> _inMemoryTransactions = [];
+  final List<CategoryItem> _inMemoryCategories = List.from(CategoryItem.defaultCategories);
   bool _useInMemory = kIsWeb;
   int _nextId = 100;
 
@@ -34,10 +36,12 @@ class DatabaseService {
       final path = join(dbPath.path, 'viet_expenses.db');
       _database = await openDatabase(
         path,
-        version: 1,
+        version: 2,
         onCreate: _createDB,
+        onUpgrade: _onUpgradeDB,
       );
       _useInMemory = false;
+      await _seedDefaultCategoriesIfEmpty();
     } catch (e) {
       debugPrint('SQLite initialization error, falling back to in-memory store: $e');
       _useInMemory = true;
@@ -71,6 +75,136 @@ class DatabaseService {
     ''');
     await db.execute('CREATE INDEX idx_transactions_date ON transactions(date)');
     await db.execute('CREATE INDEX idx_transactions_category ON transactions(category)');
+
+    await db.execute('''
+      CREATE TABLE categories (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        icon_code INTEGER NOT NULL,
+        color_value INTEGER NOT NULL,
+        is_custom INTEGER NOT NULL DEFAULT 0,
+        keywords TEXT
+      )
+    ''');
+  }
+
+  Future<void> _onUpgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS categories (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          icon_code INTEGER NOT NULL,
+          color_value INTEGER NOT NULL,
+          is_custom INTEGER NOT NULL DEFAULT 0,
+          keywords TEXT
+        )
+      ''');
+    }
+  }
+
+  Future<void> _seedDefaultCategoriesIfEmpty() async {
+    if (_database == null) return;
+    final count = Sqflite.firstIntValue(await _database!.rawQuery('SELECT COUNT(*) FROM categories')) ?? 0;
+    if (count == 0) {
+      final batch = _database!.batch();
+      for (final cat in CategoryItem.defaultCategories) {
+        batch.insert('categories', cat.toMap());
+      }
+      await batch.commit(noResult: true);
+    }
+  }
+
+  // --- CATEGORIES OPERATIONS ---
+
+  Future<List<CategoryItem>> getAllCategories() async {
+    if (_useInMemory || _database == null) {
+      return List<CategoryItem>.from(_inMemoryCategories);
+    }
+
+    try {
+      final db = _database!;
+      final result = await db.query('categories');
+      if (result.isEmpty) {
+        await _seedDefaultCategoriesIfEmpty();
+        return List<CategoryItem>.from(_inMemoryCategories);
+      }
+      return result.map((json) => CategoryItem.fromMap(json)).toList();
+    } catch (e) {
+      debugPrint('Query categories error: $e');
+      return List<CategoryItem>.from(_inMemoryCategories);
+    }
+  }
+
+  Future<void> addCategory(CategoryItem item) async {
+    if (_useInMemory || _database == null) {
+      _inMemoryCategories.add(item);
+      return;
+    }
+
+    try {
+      final db = _database!;
+      await db.insert('categories', item.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    } catch (e) {
+      _inMemoryCategories.add(item);
+    }
+  }
+
+  Future<void> updateCategory(CategoryItem item) async {
+    if (_useInMemory || _database == null) {
+      final idx = _inMemoryCategories.indexWhere((c) => c.id == item.id);
+      if (idx != -1) {
+        _inMemoryCategories[idx] = item;
+      }
+      return;
+    }
+
+    try {
+      final db = _database!;
+      await db.update(
+        'categories',
+        item.toMap(),
+        where: 'id = ?',
+        whereArgs: [item.id],
+      );
+    } catch (e) {
+      debugPrint('Update category error: $e');
+    }
+  }
+
+  Future<void> deleteCategory(String categoryId) async {
+    if (_useInMemory || _database == null) {
+      _inMemoryCategories.removeWhere((c) => c.id == categoryId);
+      return;
+    }
+
+    try {
+      final db = _database!;
+      await db.delete(
+        'categories',
+        where: 'id = ?',
+        whereArgs: [categoryId],
+      );
+    } catch (e) {
+      _inMemoryCategories.removeWhere((c) => c.id == categoryId);
+    }
+  }
+
+  Future<int> getTransactionCountForCategory(String categoryName) async {
+    if (_useInMemory || _database == null) {
+      return _inMemoryTransactions.where((t) => t.category.displayName.toLowerCase() == categoryName.toLowerCase() || t.category.name.toLowerCase() == categoryName.toLowerCase()).length;
+    }
+
+    try {
+      final db = _database!;
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM transactions WHERE category = ? OR category LIKE ?',
+        [categoryName, '%$categoryName%'],
+      );
+      return Sqflite.firstIntValue(result) ?? 0;
+    } catch (e) {
+      return 0;
+    }
   }
 
   // --- CRUD OPERATIONS ---
@@ -150,6 +284,71 @@ class DatabaseService {
     } catch (e) {
       _inMemoryTransactions.removeWhere((t) => t.id == id);
       return 1;
+    }
+  }
+
+  double _monthlyBudget = 10000000.0; // Default 10.000.000 VND
+
+  Future<double> getMonthlyBudget() async {
+    if (_useInMemory || _database == null) {
+      return _monthlyBudget;
+    }
+    try {
+      final db = _database!;
+      final res = await db.rawQuery("SELECT value FROM settings WHERE key = 'monthly_budget'");
+      if (res.isNotEmpty && res.first['value'] != null) {
+        return double.tryParse(res.first['value'] as String) ?? _monthlyBudget;
+      }
+      return _monthlyBudget;
+    } catch (e) {
+      return _monthlyBudget;
+    }
+  }
+
+  Future<void> setMonthlyBudget(double amount) async {
+    _monthlyBudget = amount;
+    if (_useInMemory || _database == null) return;
+    try {
+      final db = _database!;
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS settings (
+          key TEXT PRIMARY KEY,
+          value TEXT
+        )
+      ''');
+      await db.rawInsert(
+        'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)',
+        ['monthly_budget', amount.toString()],
+      );
+    } catch (e) {
+      debugPrint('Error setting monthly budget: $e');
+    }
+  }
+
+  Future<double> getMonthlySpending(DateTime month) async {
+    final startOfMonth = DateTime(month.year, month.month, 1);
+    final endOfMonth = DateTime(month.year, month.month + 1, 1).subtract(const Duration(milliseconds: 1));
+
+    if (_useInMemory || _database == null) {
+      return _inMemoryTransactions
+          .where((t) => t.date.isAfter(startOfMonth.subtract(const Duration(seconds: 1))) && t.date.isBefore(endOfMonth.add(const Duration(seconds: 1))))
+          .fold<double>(0.0, (sum, t) => sum + t.amount);
+    }
+
+    try {
+      final db = _database!;
+      final startStr = startOfMonth.toIso8601String();
+      final endStr = endOfMonth.toIso8601String();
+      final result = await db.rawQuery(
+        'SELECT SUM(amount) as total FROM transactions WHERE date >= ? AND date <= ?',
+        [startStr, endStr],
+      );
+      final total = result.first['total'];
+      return (total != null) ? (total as num).toDouble() : 0.0;
+    } catch (e) {
+      return _inMemoryTransactions
+          .where((t) => t.date.isAfter(startOfMonth.subtract(const Duration(seconds: 1))) && t.date.isBefore(endOfMonth.add(const Duration(seconds: 1))))
+          .fold<double>(0.0, (sum, t) => sum + t.amount);
     }
   }
 

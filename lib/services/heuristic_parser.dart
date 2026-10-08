@@ -4,40 +4,59 @@ import '../core/utils/date_formatter.dart';
 import '../models/parsed_result.dart';
 
 class HeuristicParser {
-  // Vietnamese Banking Entities
+  // All Vietnamese Banking Entities & E-Wallets / Payment Services
   static final List<String> _vietnameseBanks = [
-    'Vietcombank', 'VCB',
-    'Techcombank', 'TCB',
-    'MBBank', 'MB Bank', 'MB',
-    'VPBank', 'VP Bank',
-    'TPBank', 'TP Bank',
-    'BIDV',
-    'Agribank',
-    'ACB',
-    'OCB',
-    'VIB',
-    'Sacombank',
-    'HDBank',
-    'SHB',
-    'SeABank',
-    'MSB',
-    'Eximbank',
-    'MoMo', 'Ví MoMo',
-    'ZaloPay',
-    'VNPay',
-    'Cake', 'Cake by VPBank',
-    'Timo',
-    'Viettel Money',
+    // Big 4 & Commercial Banks in Vietnam
+    'NHTMCP Ngoại Thương', 'Vietcombank', 'VCB',
+    'NHTMCP Quân Đội', 'Ngân hàng Quân Đội', 'MBBank', 'MB Bank', 'MB',
+    'NHTMCP Kỹ Thương', 'Techcombank', 'TCB',
+    'NHTMCP Công Thương', 'VietinBank', 'Vietin Bank', 'CTG',
+    'NHTMCP Đầu tư và Phát triển', 'BIDV',
+    'Agribank', 'Nông nghiệp và Phát triển Nông thôn',
+    'NHTMCP Việt Nam Thịnh Vượng', 'VPBank', 'VP Bank',
+    'NHTMCP Tiên Phong', 'TPBank', 'TP Bank',
+    'NHTMCP Á Châu', 'ACB',
+    'NHTMCP Sài Gòn Thương Tín', 'Sacombank',
+    'NHTMCP Phát triển TP.HCM', 'HDBank', 'HD Bank',
+    'NHTMCP Sài Gòn - Hà Nội', 'SHB',
+    'NHTMCP Quốc tế', 'VIB',
+    'NHTMCP Hàng Hải', 'MSB', 'Maritime Bank',
+    'NHTMCP Phương Đông', 'OCB',
+    'NHTMCP Đông Nam Á', 'SeABank',
+    'NHTMCP Xuất Nhập Khẩu', 'Eximbank',
+    'NHTMCP Lộc Phát', 'LPBank', 'LienVietPostBank',
+    'NHTMCP Nam Á', 'Nam A Bank',
+    'NHTMCP Bắc Á', 'Bac A Bank',
+    'NHTMCP Việt Á', 'Viet A Bank',
+    'NHTMCP Kiên Long', 'Kienlongbank',
+    'NHTMCP Bảo Việt', 'BaoViet Bank',
+    'NHTMCP Sài Gòn Công Thương', 'Saigonbank',
+    'NHTMCP Đại Chúng', 'PVcomBank',
+    'NHTMCP Quốc Dân', 'NCB',
+    'Shinhan Bank', 'HSBC', 'Standard Chartered', 'Citibank', 'UOB', 'Public Bank', 'Hong Leong', 'CIMB', 'Woori Bank', 'Indovina Bank',
+
+    // Top E-Wallets & Digital Banks
+    'MoMo', 'Ví MoMo', 'MoMo E-Wallet',
+    'ZaloPay', 'Ví ZaloPay',
+    'VNPay', 'VNPay-QR', 'VNPAY', 'Cổng VNPay',
+    'ShopeePay', 'Ví ShopeePay', 'AirPay',
+    'Viettel Money', 'ViettelPay', 'ViettelPay Pro',
+    'VNPT Money', 'VNPT Pay',
+    'Apple Pay', 'Google Pay', 'Samsung Pay',
+    'VETC', 'ePass',
+    'Timo', 'Cake', 'Cake by VPBank', 'TNEX', 'Liobank', 'Ubank',
+    'PayOS', 'Napas', 'Napas 247', 'VietQR',
   ];
 
   static final List<String> _popularStores = [
     'Highlands Coffee', 'Highlands',
     'The Coffee House', 'Phúc Long', 'Phuc Long',
-    'Katinat', 'Trung Nguyên', 'Starbucks',
+    'Katinat', 'Trung Nguyên', 'Starbucks', 'Cheese Coffee', 'Gong Cha', 'TocoToco', 'Mixue',
     'Circle K', 'WinMart', 'WinMart+', 'GS25', 'Ministop', 'FamilyMart', '7-Eleven',
-    'Annam Gourmet', 'Co.opmart', 'Coopmart', 'Bách Hóa Xanh', 'Bach Hoa Xanh',
-    'Shopee', 'Lazada', 'Tiki', 'Grab', 'Be', 'Xanh SM', 'Gojek',
-    'Cơm Tấm', 'Phở 24', 'Lotteria', 'KFC', 'Jollibee', 'Pizza Hut', 'The Pizza Company',
+    'Annam Gourmet', 'Co.opmart', 'Coopmart', 'Bách Hóa Xanh', 'Bach Hoa Xanh', 'Emart', 'Lotte Mart', 'Big C', 'GO!', 'Aeon', 'Aeon Mall',
+    'Shopee', 'Lazada', 'Tiki', 'Grab', 'Be', 'Xanh SM', 'Gojek', 'TikTok Shop',
+    'Cơm Tấm', 'Cơm Tấm Phúc Lộc Thọ', 'Phở 24', 'Lotteria', 'KFC', 'Jollibee', 'Pizza Hut', 'The Pizza Company', 'Gogi House', 'Kichi Kichi', 'Manwah', 'Haidilao',
+    'Fahasa', 'Nhà sách Phương Nam', 'Tiền phòng', 'Tiền trọ', 'Điện lực EVN', 'Cấp nước',
   ];
 
   /// Main parse method that transforms OCR raw text and lines into a structured ParsedResult
@@ -252,36 +271,45 @@ class HeuristicParser {
       }
     }
 
-    // Pattern for Banking transfer recipient
-    // "Người thụ hưởng: NGUYEN VAN A", "Tên người nhận: LE THI B", "Đến: HIGHLANDS COFFEE"
+    // Priority 1: Direct recipient keywords (Người nhận, Đến, Người thụ hưởng, Đơn vị nhận...)
+    // Handles both same-line: "Đến: NGUYEN DANG DUC HUY" and multi-line: "Đến:" \n "NGUYEN DANG DUC HUY"
     final recipientKeywordPattern = RegExp(
-      r'(?:tên\s*người\s*nhận|người\s*(?:thụ\s*hưởng|nhận)|đơn\s*vị\s*thụ\s*hưởng|tài\s*khoản\s*nhận|chuyển\s*(?:đến|tới)|đến\s*tài\s*khoản|beneficiary|tới|đến)\s*[:=]?\s*(.+)',
+      r'^(?:tên\s*người\s*nhận|người\s*(?:thụ\s*hưởng|nhận|hưởng)|đơn\s*vị\s*(?:thụ\s*hưởng|nhận)|tài\s*khoản\s*(?:nhận|thụ\s*hưởng|đến|hưởng)|chuyển\s*(?:đến|tới)|đến\s*tài\s*khoản|tới\s*tài\s*khoản|beneficiary|tới|đến)\s*[:=]?\s*(.*)$',
+      caseSensitive: false,
+    );
+
+    // Exclusion keywords for sender or system labels
+    final ignoreLinePattern = RegExp(
+      r'^(?:từ|người\s*chuyển|người\s*gửi|tài\s*khoản\s*(?:nguồn|trích|chuyển)|nguồn\s*tiền|số\s*dư|phí\s*giao\s*dịch|phí\s*chuyển|giao\s*dịch\s*thành\s*công|chuyển\s*tiền\s*thành\s*công)\b',
       caseSensitive: false,
     );
 
     for (int i = 0; i < lines.length; i++) {
-      final line = lines[i];
+      final line = lines[i].trim();
+      if (ignoreLinePattern.hasMatch(line)) continue;
+
       final match = recipientKeywordPattern.firstMatch(line);
       if (match != null) {
         String name = match.group(1)?.trim() ?? '';
-        // If the label is on its own line and name is on next line:
-        if (name.isEmpty && i + 1 < lines.length) {
+        // If label was alone on line (e.g. "Đến:" or "Người thụ hưởng:"), look at next line
+        if ((name.isEmpty || name == ':') && i + 1 < lines.length) {
           name = lines[i + 1].trim();
         }
-        if (name.isNotEmpty && !name.contains(RegExp(r'^\d+$'))) {
+        name = _cleanRecipientName(name);
+        if (name.isNotEmpty && !RegExp(r'^\d+$').hasMatch(name) && !ignoreLinePattern.hasMatch(name)) {
           matchedTokens.add('Người nhận (keyword): $name');
-          return (recipient: _cleanRecipientName(name), bank: foundBank);
+          return (recipient: name, bank: foundBank);
         }
       }
     }
 
-    // Pattern for UPPERCASE Beneficiary Name common in Vietnamese Banking Receipts:
-    // e.g. "NGUYEN VAN HOANG", "CONG TY TNHH ABC"
+    // Priority 2: Look for UPPERCASE beneficiary name (e.g. "NGUYEN DANG DUC HUY")
     final uppercaseNamePattern = RegExp(r'^[A-ZÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬĐÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴ\s]{4,35}$');
-    for (final line in lines) {
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
       if (uppercaseNamePattern.hasMatch(line)) {
-        // Exclude system status like "GIAO DICH THANH CONG", "CHUYEN TIEN THANH CONG"
         final lower = line.toLowerCase();
+        // Exclude system status & bank names
         if (!lower.contains('thanh cong') &&
             !lower.contains('giao dich') &&
             !lower.contains('chuyen khoan') &&
@@ -290,7 +318,17 @@ class HeuristicParser {
             !lower.contains('vcb') &&
             !lower.contains('vietcombank') &&
             !lower.contains('techcombank') &&
-            !lower.contains('mbbank')) {
+            !lower.contains('mbbank') &&
+            !lower.contains('bidv') &&
+            !lower.contains('quan doi') &&
+            !lower.contains('dong a') &&
+            !lower.contains('vietinbank') &&
+            !lower.contains('agribank') &&
+            !lower.contains('sacombank')) {
+          // Check if previous line was a sender label (skip if sender)
+          if (i > 0 && RegExp(r'^(?:từ|người\s*chuyển|người\s*gửi|tài\s*khoản\s*nguồn)', caseSensitive: false).hasMatch(lines[i - 1].trim())) {
+            continue;
+          }
           matchedTokens.add('Người nhận (UPPERCASE): $line');
           return (recipient: line, bank: foundBank);
         }
@@ -380,15 +418,19 @@ class HeuristicParser {
     List<String> matchedTokens,
   ) {
     final pattern = RegExp(
-      r'(?:mã\s*(?:giao\s*dịch|gd|tham\s*chiếu|đơn)|trace\s*no|ref(?:\s*no)?|ft)\s*[:=]?\s*([A-Za-z0-9_\-]+)',
+      r'^(?:mã\s*(?:giao\s*dịch|gd|tham\s*chiếu|đơn)|số\s*tham\s*chiếu|trace\s*no|ref(?:\s*no)?|ft)\s*[:=]?\s*(.*)$',
       caseSensitive: false,
     );
 
-    for (final line in lines) {
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
       final match = pattern.firstMatch(line);
       if (match != null) {
-        final code = match.group(1);
-        if (code != null && code.length >= 4) {
+        String code = match.group(1)?.trim() ?? '';
+        if ((code.isEmpty || code == ':') && i + 1 < lines.length) {
+          code = lines[i + 1].trim();
+        }
+        if (code.isNotEmpty && code.length >= 4 && !code.contains(' ')) {
           matchedTokens.add('Mã GD: $code');
           return code;
         }
@@ -401,18 +443,19 @@ class HeuristicParser {
   // --- 6. TRANSFER NOTE / CONTENT ---
   static String? _parseTransferNote(List<String> lines, String fullText) {
     final pattern = RegExp(
-      r'(?:nội\s*dung(?:\s*chuyển\s*khoản)?|lời\s*nhắn|diễn\s*giải|thông\s*tin\s*ck|message|desc)\s*[:=]?\s*(.+)',
+      r'^(?:nội\s*dung(?:\s*chuyển\s*khoản)?|lời\s*nhắn|diễn\s*giải|thông\s*tin\s*ck|message|desc)\s*[:=]?\s*(.*)$',
       caseSensitive: false,
     );
 
     for (int i = 0; i < lines.length; i++) {
-      final match = pattern.firstMatch(lines[i]);
+      final line = lines[i].trim();
+      final match = pattern.firstMatch(line);
       if (match != null) {
         String content = match.group(1)?.trim() ?? '';
-        if (content.isEmpty && i + 1 < lines.length) {
+        if ((content.isEmpty || content == ':') && i + 1 < lines.length) {
           content = lines[i + 1].trim();
         }
-        if (content.isNotEmpty) {
+        if (content.isNotEmpty && !content.toLowerCase().startsWith('số tham chiếu')) {
           return content;
         }
       }
@@ -427,94 +470,86 @@ class HeuristicParser {
     required String rawText,
     String? bank,
   }) {
-    final combined = '${store.toLowerCase()} ${note?.toLowerCase() ?? ''} ${rawText.toLowerCase()}';
+    // Check store / recipient / note first with high priority
+    final primaryContext = _removeDiacritics('${store.toLowerCase()} ${note?.toLowerCase() ?? ''}');
+    final fullContext = _removeDiacritics('$primaryContext ${rawText.toLowerCase()}');
 
-    // 1. Food & Beverage
-    if (combined.contains('cafe') ||
-        combined.contains('coffee') ||
-        combined.contains('trà sữa') ||
-        combined.contains('highland') ||
-        combined.contains('phúc long') ||
-        combined.contains('katinat') ||
-        combined.contains('cơm') ||
-        combined.contains('phở') ||
-        combined.contains('bún') ||
-        combined.contains('quán') ||
-        combined.contains('lẩu') ||
-        combined.contains('nướng') ||
-        combined.contains('pizza') ||
-        combined.contains('kfc') ||
-        combined.contains('lotteria') ||
-        combined.contains('ăn uống') ||
-        combined.contains('bánh')) {
-      return ExpenseCategory.food;
-    }
-
-    // 2. Transport & Gas
-    if (combined.contains('grab') ||
-        combined.contains('be ') ||
-        combined.contains('xanh sm') ||
-        combined.contains('gojek') ||
-        combined.contains('taxi') ||
-        combined.contains('xăng') ||
-        combined.contains('petrolimex') ||
-        combined.contains('gửi xe') ||
-        combined.contains('vé xe')) {
-      return ExpenseCategory.transport;
-    }
-
-    // 3. Shopping & Supermarket
-    if (combined.contains('winmart') ||
-        combined.contains('circle k') ||
-        combined.contains('gs25') ||
-        combined.contains('ministop') ||
-        combined.contains('7-eleven') ||
-        combined.contains('siêu thị') ||
-        combined.contains('co.opmart') ||
-        combined.contains('shopee') ||
-        combined.contains('lazada') ||
-        combined.contains('tiki') ||
-        combined.contains('quần áo') ||
-        combined.contains('thời trang') ||
-        combined.contains('shop') ||
-        combined.contains('mart')) {
+    // 1. Shopping & Supermarket (Check supermarkets / malls first before generic words)
+    final shoppingRegex = RegExp(
+      r'\b(winmart|circle k|gs25|ministop|7-eleven|7 eleven|sieu thi|co\.opmart|coopmart|bach hoa xanh|shopee|lazada|tiki|tiktok shop|quan ao|thoi trang|my pham|mua sam|tap hoa|store|shop|mart)\b',
+      caseSensitive: false,
+    );
+    if (shoppingRegex.hasMatch(primaryContext) || shoppingRegex.hasMatch(fullContext)) {
       return ExpenseCategory.shopping;
     }
 
-    // 4. Utilities & Bills
-    if (combined.contains('điện') ||
-        combined.contains('nước') ||
-        combined.contains('internet') ||
-        combined.contains('viettel') ||
-        combined.contains('fpt') ||
-        combined.contains('vnpt') ||
-        combined.contains('tiền nhà') ||
-        combined.contains('học phí') ||
-        combined.contains('bảo hiểm')) {
+    // 2. Transport & Gas (Grab, Be, Xanh SM, Gojek, VETC, Taxi, Vé xe)
+    final transportRegex = RegExp(
+      r'\b(grab|be|xanh sm|gojek|taxi|xang|petrolimex|gui xe|ve xe|vetc|epass|may bay|flight|vietnam airlines|vietjet|shopee food driver)\b',
+      caseSensitive: false,
+    );
+    if (transportRegex.hasMatch(primaryContext) || transportRegex.hasMatch(fullContext)) {
+      return ExpenseCategory.transport;
+    }
+
+    // 3. Food & Beverage (Ăn uống, cafe, trà sữa, quán ăn, phở, bún, cơm...)
+    final foodRegex = RegExp(
+      r'\b(cafe|coffee|tra sua|tra chanh|highland|phuc long|katinat|starbuck|the coffee house|com|pho|bun|quan an|lau|nuong|pizza|kfc|lotteria|jollibee|an uong|an trua|an toi|an sang|tien an|do an|thuc pham|nuoc uong|banh|nhau|food|drink|dinner|lunch|breakfast)\b',
+      caseSensitive: false,
+    );
+    // Avoid matching 'com' from 'techcombank' or 'commerce'
+    final cleanContextWithoutBankNames = primaryContext
+        .replaceAll('techcombank', '')
+        .replaceAll('saigonbank', '')
+        .replaceAll('pvcombank', '');
+    if (foodRegex.hasMatch(cleanContextWithoutBankNames)) {
+      return ExpenseCategory.food;
+    }
+    final fullCleanContext = fullContext
+        .replaceAll('techcombank', '')
+        .replaceAll('saigonbank', '')
+        .replaceAll('pvcombank', '');
+    if (foodRegex.hasMatch(fullCleanContext)) {
+      return ExpenseCategory.food;
+    }
+
+    // 4. Utilities & Bills (Điện, nước, internet, học phí, tiền nhà)
+    final utilitiesRegex = RegExp(
+      r'\b(dien|nuoc|evn|cap nuoc|internet|viettel|fpt|vnpt|tien nha|tien tro|hoc phi|bao hiem|chung cu|phi dich vu)\b',
+      caseSensitive: false,
+    );
+    if (utilitiesRegex.hasMatch(primaryContext) || utilitiesRegex.hasMatch(fullContext)) {
       return ExpenseCategory.utilities;
     }
 
-    // 5. Entertainment
-    if (combined.contains('cgv') ||
-        combined.contains('lotte cinema') ||
-        combined.contains('vé xem phim') ||
-        combined.contains('bida') ||
-        combined.contains('karaoke') ||
-        combined.contains('du lịch') ||
-        combined.contains('khách sạn')) {
+    // 5. Entertainment (Xem phim, du lịch, bida, game)
+    final entertainmentRegex = RegExp(
+      r'\b(cgv|lotte cinema|ve xem phim|cinema|bida|karaoke|du lich|khach san|hotel|resort|netflix|spotify|game|steam)\b',
+      caseSensitive: false,
+    );
+    if (entertainmentRegex.hasMatch(primaryContext) || entertainmentRegex.hasMatch(fullContext)) {
       return ExpenseCategory.entertainment;
     }
 
-    // 6. Personal Transfer / Banking
-    if (combined.contains('chuyển khoản') ||
-        combined.contains('trả tiền') ||
-        combined.contains('góp') ||
-        combined.contains('lì xì') ||
-        combined.contains('vay') ||
-        combined.contains('mượn')) {
+    // 6. Personal Transfer / Banking (Chuyển khoản cá nhân, trả nợ, lì xì)
+    final personalRegex = RegExp(
+      r'\b(chuyen khoan|tra tien|tra no|gop|li xi|vay|muon)\b',
+      caseSensitive: false,
+    );
+    if (personalRegex.hasMatch(primaryContext) || personalRegex.hasMatch(fullContext)) {
       return ExpenseCategory.personal;
     }
 
     return ExpenseCategory.other;
+  }
+
+  static String _removeDiacritics(String str) {
+    const withDia = 'àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ';
+    const withoutDia = 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyydAAAAAAAAAAAAAAAAAEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYYD';
+    var result = str;
+    for (int i = 0; i < withDia.length; i++) {
+      result = result.replaceAll(withDia[i], withoutDia[i]);
+    }
+    return result;
   }
 }

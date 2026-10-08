@@ -1,0 +1,26 @@
+---
+description: Flutter & Dart rules for Viet Expense OCR
+globs: **/*.dart
+---
+
+# Flutter & Dart Rules for Viet Expense OCR
+
+## General Standards
+- Use modern Dart 3 features: records, pattern matching, sealed classes, enhanced enums.
+- Strictly adhere to `analysis_options.yaml` lint rules.
+- Minimize rebuilds by using `const` constructors wherever possible.
+- Avoid passing raw dynamic data across architectural boundaries.
+
+## Architecture & Layer Responsibilities
+- **Input / Hardware Layer:** `image_picker`, camera integration, and mockups.
+- **OCR Service (`lib/services/ocr_service.dart`):** Google ML Kit text recognition for offline extraction.
+- **Heuristic Engine (`lib/services/heuristic_parser.dart`):** Regex parsing for Vietnamese transaction texts (Amount, Date/Time, Recipient, Category).
+- **Verification UI (`lib/views/scan/verification_screen.dart`):** Let users inspect and correct OCR-detected values before saving.
+- **Local Storage (`lib/services/database_service.dart`):** SQLite persistence.
+- **Data Visualization (`lib/views/analytics/`):** CustomPainter for lightweight, high-performance charts.
+
+## UI & Layout Best Practices
+- Use `SafeArea` and responsive widgets (`LayoutBuilder`, `MediaQuery`).
+- Ensure dark and light theme consistency via `AppTheme` (`lib/core/theme/app_theme.dart`).
+- Handle text overflow gracefully (`overflow: TextOverflow.ellipsis`).
+- Provide immediate feedback with snackbars, loading indicators, and intuitive validation.

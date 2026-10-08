@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/categories.dart';
 import '../../core/theme/app_theme.dart';
@@ -11,11 +12,13 @@ import '../../services/database_service.dart';
 class VerificationScreen extends StatefulWidget {
   final ParsedResult parsedResult;
   final String? imagePath;
+  final Uint8List? imageBytes;
 
   const VerificationScreen({
     super.key,
     required this.parsedResult,
     this.imagePath,
+    this.imageBytes,
   });
 
   @override
@@ -66,6 +69,33 @@ class _VerificationScreenState extends State<VerificationScreen> {
     _noteController.dispose();
     _txCodeController.dispose();
     super.dispose();
+  }
+
+  Widget _buildReceiptImage() {
+    if (widget.imageBytes != null) {
+      return Image.memory(widget.imageBytes!, fit: BoxFit.cover);
+    }
+    if (widget.imagePath != null && widget.imagePath!.isNotEmpty) {
+      if (kIsWeb) {
+        return Image.network(
+          widget.imagePath!,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => const Center(
+            child: Icon(Icons.receipt_long_rounded, color: Colors.white70, size: 36),
+          ),
+        );
+      } else {
+        try {
+          final file = File(widget.imagePath!);
+          if (file.existsSync()) {
+            return Image.file(file, fit: BoxFit.cover);
+          }
+        } catch (_) {}
+      }
+    }
+    return const Center(
+      child: Icon(Icons.receipt_long_rounded, color: Colors.white70, size: 36),
+    );
   }
 
   Future<void> _pickDate() async {
@@ -350,7 +380,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         Row(
                           children: [
                             Text(
-                              'Độ tin cậy OCR: $confPercent%',
+                              confPercent > 0 ? 'Độ tin cậy OCR: $confPercent%' : 'Chế độ xem & Nhập liệu',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
@@ -361,19 +391,27 @@ class _VerificationScreenState extends State<VerificationScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: confPercent >= 70 ? AppTheme.success : AppTheme.warning,
+                                color: confPercent >= 70
+                                    ? AppTheme.success
+                                    : (confPercent > 0 ? AppTheme.warning : AppTheme.accent),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                confPercent >= 70 ? 'Tốt' : 'Cần kiểm tra',
-                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black),
+                                confPercent >= 70 ? 'AI Tự động' : (confPercent > 0 ? 'Cần kiểm tra' : 'Thủ công / Web'),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: confPercent >= 70 ? Colors.black : Colors.white,
+                                ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Đã tự động trích xuất ${widget.parsedResult.matchedFieldCount} trường. Bạn có thể sửa tay bên dưới.',
+                          confPercent > 0
+                              ? 'Đã tự động trích xuất ${widget.parsedResult.matchedFieldCount} trường. Bạn có thể chỉnh sửa trước khi lưu.'
+                              : 'Vui lòng nhìn ảnh biên lai ở trên để kiểm tra hoặc điền nhanh số tiền & người nhận.',
                           style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                         ),
                       ],
@@ -383,7 +421,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
               ),
             ),
 
-            if (widget.imagePath != null && File(widget.imagePath!).existsSync()) ...[
+            if (widget.imageBytes != null || (widget.imagePath != null && widget.imagePath!.isNotEmpty)) ...[
               const SizedBox(height: 14),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
@@ -393,7 +431,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.file(File(widget.imagePath!), fit: BoxFit.cover),
+                      _buildReceiptImage(),
                       Container(color: Colors.black38),
                       const Center(
                         child: Row(

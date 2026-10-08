@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Ứng dụng cần quyền truy cập Camera để chụp ảnh hóa đơn và ảnh chuyển khoản ngân hàng phục vụ bóc tách OCR.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ứng dụng cần quyền truy cập Thư viện ảnh để chọn ảnh chụp màn hình giao dịch VietQR và hóa đơn chi tiêu.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Ứng dụng cần quyền truy cập nếu cần quay video quét chứng từ.</string>
 </dict>
 </plist>

@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/ocr_service.dart';
 import '../../widgets/sample_receipt_selector.dart';
+import 'quick_add_modal.dart';
 import 'verification_screen.dart';
 
 class ScanInputSheet extends StatefulWidget {
@@ -27,8 +28,11 @@ class _ScanInputSheetState extends State<ScanInputSheet> {
 
       setState(() => _isProcessing = true);
 
+      // Read bytes safely for both Web and Native
+      final bytes = await photo.readAsBytes();
+
       // Process with Edge AI Offline OCR
-      final parsedResult = await OcrService.instance.processImageFile(photo.path);
+      final parsedResult = await OcrService.instance.processImageFile(photo.path, imageBytes: bytes);
 
       if (!mounted) return;
       setState(() => _isProcessing = false);
@@ -40,6 +44,7 @@ class _ScanInputSheetState extends State<ScanInputSheet> {
           builder: (context) => VerificationScreen(
             parsedResult: parsedResult,
             imagePath: photo.path,
+            imageBytes: bytes,
           ),
         ),
       );
@@ -199,6 +204,19 @@ class _ScanInputSheetState extends State<ScanInputSheet> {
               children: [
                 Expanded(
                   child: _ActionCard(
+                    icon: Icons.bolt_rounded,
+                    label: 'Nhập nhanh',
+                    subtitle: 'Chỉ mất 3 giây',
+                    color: const Color(0xFF10B981),
+                    onTap: () {
+                      Navigator.pop(context);
+                      QuickAddModal.show(context);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _ActionCard(
                     icon: Icons.camera_alt_rounded,
                     label: 'Chụp ảnh',
                     subtitle: 'Camera máy',
@@ -206,21 +224,21 @@ class _ScanInputSheetState extends State<ScanInputSheet> {
                     onTap: () => _handleImagePick(ImageSource.camera),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _ActionCard(
                     icon: Icons.photo_library_rounded,
                     label: 'Thư viện ảnh',
-                    subtitle: 'Ảnh chụp màn hình',
+                    subtitle: 'Ảnh màn hình',
                     color: AppTheme.accent,
                     onTap: () => _handleImagePick(ImageSource.gallery),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _ActionCard(
                     icon: Icons.text_snippet_rounded,
-                    label: 'Dán Text/SMS',
+                    label: 'Dán SMS',
                     subtitle: 'Nhập tay nhanh',
                     color: const Color(0xFFF59E0B),
                     onTap: _showPasteTextDialog,

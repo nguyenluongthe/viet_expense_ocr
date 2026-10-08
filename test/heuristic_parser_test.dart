@@ -85,6 +85,91 @@ Thời gian: 29/09/2026 18:40
       expect(result.category, equals(ExpenseCategory.shopping));
     });
 
+    test('Correctly parses MoMo e-wallet transfer and note', () {
+      const rawText = '''
+Ví MoMo
+CHUYỂN TIỀN THÀNH CÔNG
+Số tiền: 150.000đ
+Người nhận: NGUYEN HOANG LONG
+Lời nhắn: Tien an trua ca nhom
+Thời gian: 05/10/2026 12:15:00
+Mã giao dịch: 38472918274
+      ''';
+
+      final result = HeuristicParser.parse(rawText: rawText);
+
+      expect(result.amount, equals(150000));
+      expect(result.storeOrRecipient, contains('NGUYEN HOANG LONG'));
+      expect(result.bankName, equals('MoMo'));
+      expect(result.note, equals('Tien an trua ca nhom'));
+      expect(result.category, equals(ExpenseCategory.food));
+    });
+
+    test('Correctly parses ZaloPay / VNPay payment with shopping purpose', () {
+      const rawText = '''
+ZaloPay
+THANH TOÁN THÀNH CÔNG
+Tổng tiền: 320.000 đ
+Đến: TIKTOK SHOP
+Nội dung: Mua quan ao thoi trang
+Thời gian: 06/10/2026 20:45
+Mã GD: ZLP88392174
+      ''';
+
+      final result = HeuristicParser.parse(rawText: rawText);
+
+      expect(result.amount, equals(320000));
+      expect(result.storeOrRecipient, contains('TIKTOK SHOP'));
+      expect(result.bankName, equals('ZaloPay'));
+      expect(result.category, equals(ExpenseCategory.shopping));
+    });
+
+    test('Correctly parses MB Quân Đội transfer screenshot format', () {
+      const rawText = '''
+Giao dịch thành công
+Đến: NGUYEN DANG DUC HUY
+Tài khoản: VQRQAATEK0324
+Tại: NHTMCP Quân Đội
+Số tiền: 250.000 VND
+Thời gian: 08/10/2026 09:55
+Nội dung: Chuyen tien hoc phi
+Mã giao dịch: MB294810283
+      ''';
+
+      final result = HeuristicParser.parse(rawText: rawText);
+
+      expect(result.amount, equals(250000));
+      expect(result.storeOrRecipient, contains('NGUYEN DANG DUC HUY'));
+      expect(result.bankName, equals('NHTMCP Quân Đội'));
+      expect(result.category, equals(ExpenseCategory.utilities));
+    });
+
+    test('Correctly parses BIDV transfer bill with multi-line recipient, note and ref code', () {
+      const rawText = '''
+BIDV
+Giao dịch thành công
+23,000 VND
+08/10/2026 09:32:00
+Đến: NGUYEN DANG DUC HUY
+Tài khoản: VQRQAATEK0324
+Tại: NHTMCP Quân Đội
+Nội dung
+LUONG THE NGUYEN Chuyen tien
+Số tham chiếu
+020097048810080931592026ixic698107
+      ''';
+
+      final result = HeuristicParser.parse(rawText: rawText);
+
+      expect(result.amount, equals(23000));
+      expect(result.storeOrRecipient, equals('NGUYEN DANG DUC HUY'));
+      expect(result.date?.day, equals(8));
+      expect(result.date?.month, equals(10));
+      expect(result.date?.year, equals(2026));
+      expect(result.note, equals('LUONG THE NGUYEN Chuyen tien'));
+      expect(result.transactionCode, equals('020097048810080931592026ixic698107'));
+    });
+
     test('CurrencyFormatter parses varied Vietnamese number notations correctly', () {
       expect(CurrencyFormatter.parseAmount('65.000 đ'), equals(65000));
       expect(CurrencyFormatter.parseAmount('120,000 VND'), equals(120000));
@@ -95,3 +180,6 @@ Thời gian: 29/09/2026 18:40
     });
   });
 }
+
+
+
